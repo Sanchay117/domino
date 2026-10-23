@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+video/build/
+video/out/*.webm
+test-results/
+playwright-report/

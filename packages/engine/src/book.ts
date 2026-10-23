@@ -1,0 +1,115 @@
+// A simulated order book that evolves while the index moves.
+//
+// Levels near the touch are treated as market-maker quotes: they re-peg to the index every tick,
+// get pulled as the move deepens, and refill over time once consumed. Deeper levels are resting
+// limit orders at fixed prices; arbitrageurs take any of them the index moves through.
+
+import type { Book, Level } from "./types.ts";
+
+interface SimLevel {
+  pegged: boolean;
+  /** Price relative to the starting index (pegged levels). */
+  rel: number;
+  /** Absolute price (static levels). */
+  abs: number;
+  qty: number;
+  orig: number;
+}
+
+export interface Fill {
+  price: number;
+  qty: number;
+}
+
+export class SimBook {
+  private bids: SimLevel[];
+  private asks: SimLevel[];
+  private index: number;
+
+  constructor(book: Book, index0: number, pegBand: number) {
+    const mid = book.bids.length && book.asks.length ? (book.bids[0][0] + book.asks[0][0]) / 2 : index0;
+    const mk = ([p, q]: Level): SimLevel => ({ pegged: Math.abs(p / mid - 1) <= pegBand, rel: p / index0, abs: p, qty: q, orig: q });
+    this.bids = book.bids.map(mk);
+    this.asks = book.asks.map(mk);
+    this.index = index0;
+  }
+
+  private priceOf(l: SimLevel): number {
+    return l.pegged ? l.rel * this.index : l.abs;
+  }
+
+  /**
+   * Move to a new index. `stress` is |index/index0 − 1|; quotes are pulled by up to `withdrawal`
+   * at a 10% move and refill toward that target at `refillPerSec`. Returns arbitraged notional.
+   */
+  update(index: number, stress: number, withdrawal: number, refillPerSec: number): number {
+    this.index = index;
+    const cap = 1 - withdrawal * Math.min(1, stress / 0.1);
+    let arbitraged = 0;
+    for (const l of this.bids) {
+      if (l.pegged) {
+        const target = l.orig * cap;
+        l.qty = l.qty > target ? target : l.qty + (target - l.qty) * refillPerSec;
+      } else if (l.qty > 0 && l.abs > index) {
+        arbitraged += l.abs * l.qty;
+        l.qty = 0;
+      }
+    }
+    for (const l of this.asks) {
+      if (l.pegged) {
+        const target = l.orig * cap;
+        l.qty = l.qty > target ? target : l.qty + (target - l.qty) * refillPerSec;
+      } else if (l.qty > 0 && l.abs < index) {
+        arbitraged += l.abs * l.qty;
+        l.qty = 0;
+      }
+    }
+    return arbitraged;
+  }
+
+  private sorted(side: "bids" | "asks"): { l: SimLevel; p: number }[] {
+    const rows = (side === "bids" ? this.bids : this.asks).filter((l) => l.qty > 1e-12).map((l) => ({ l, p: this.priceOf(l) }));
+    rows.sort(side === "bids" ? (a, b) => b.p - a.p : (a, b) => a.p - b.p);
+    return rows;
+  }
+
+  levels(side: "bids" | "asks"): Level[] {
+    return this.sorted(side).map(({ l, p }) => [p, l.qty]);
+  }
+
+  best(side: "bids" | "asks"): number {
+    let best = 0;
+    for (const l of side === "bids" ? this.bids : this.asks) {
+      if (l.qty <= 1e-12) continue;
+      const p = this.priceOf(l);
+      if (best === 0 || (side === "bids" ? p > best : p < best)) best = p;
+    }
+    return best;
+  }
+
+  /** USD depth on one side within `pct` of `ref`. */
+  depthWithin(side: "bids" | "asks", ref: number, pct: number): number {
+    let usd = 0;
+    for (const l of side === "bids" ? this.bids : this.asks) {
+      if (l.qty <= 1e-12) continue;
+      const p = this.priceOf(l);
+      if (side === "bids" ? p >= ref * (1 - pct) : p <= ref * (1 + pct)) usd += p * l.qty;
+    }
+    return usd;
+  }
+
+  /** Take liquidity like an IOC: sells hit bids ≥ limit, buys lift asks ≤ limit. */
+  take(side: "bids" | "asks", limit: number, qty: number): Fill[] {
+    const fills: Fill[] = [];
+    let remaining = qty;
+    for (const { l, p } of this.sorted(side)) {
+      if (remaining <= 1e-12) break;
+      if (side === "bids" ? p < limit - 1e-12 : p > limit + 1e-12) break;
+      const q = Math.min(l.qty, remaining);
+      l.qty -= q;
+      remaining -= q;
+      fills.push({ price: p, qty: q });
+    }
+    return fills;
+  }
+}

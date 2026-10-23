@@ -1,0 +1,26 @@
+{
+  "name": "domino",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Domino: a stress-test lab for Strike Finance's liquidation engine",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @domino/web",
+    "build": "npm run build -w @domino/web",
+    "test": "npm test -w @domino/engine",
+    "typecheck": "tsc -p packages/engine && tsc -p apps/web && tsc -p apps/guardian && tsc -p apps/mcp",
+    "snapshot": "tsx scripts/snapshot.ts",
+    "guardian": "tsx apps/guardian/src/cli.ts",
+    "mcp": "tsx apps/mcp/src/server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "MIT"
+}
