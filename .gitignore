@@ -9,3 +9,4 @@ video/build/
 video/out/*.webm
 test-results/
 playwright-report/
+.claude/

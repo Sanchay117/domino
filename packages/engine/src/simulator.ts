@@ -41,6 +41,8 @@ export interface SimParams {
   ifNotionalMultiple: number;
   /** "strike": median(P1, P2, P3) mark from the simulated book. "index": mark tracks the index (no local feedback). */
   markModel: "strike" | "index";
+  /** Record the top of the simulated book every tick for these symbols (for visualisation). */
+  recordBooks?: string[];
 }
 
 export const DEFAULT_PARAMS: SimParams = {
@@ -92,6 +94,8 @@ export interface Frame {
   liquidated: number;
   insurance: number;
   adl: number;
+  /** Top 120 levels per side, only for `params.recordBooks` symbols. */
+  books?: Record<string, { bids: [number, number][]; asks: [number, number][] }>;
 }
 
 export interface PositionFate {
@@ -512,7 +516,15 @@ export class Simulator {
       const ref = this.index[s];
       symbols[s] = { index: ref, mark: this.marks[s], bid: b.best("bids"), ask: b.best("asks"), bidDepth: b.depthWithin("bids", ref, 0.05), askDepth: b.depthWithin("asks", ref, 0.05) };
     }
-    this.frames.push({ t: this.t, symbols, liquidated: this.totals.liquidated, insurance: this.totals.insurance, adl: this.totals.adl });
+    const frame: Frame = { t: this.t, symbols, liquidated: this.totals.liquidated, insurance: this.totals.insurance, adl: this.totals.adl };
+    if (this.params.recordBooks?.length) {
+      frame.books = {};
+      for (const s of this.params.recordBooks) {
+        const b = this.books[s];
+        if (b) frame.books[s] = { bids: b.levels("bids").slice(0, 120), asks: b.levels("asks").slice(0, 120) };
+      }
+    }
+    this.frames.push(frame);
   }
 
   result(): SimResult {

@@ -75,6 +75,8 @@ export interface MarketRisk {
   beta: number;
   positions: number;
   accounts: number;
+  longs: number;
+  shorts: number;
   longUsd: number;
   shortUsd: number;
   /** Nearest long liquidation as a signed move (negative), and nearest short liquidation (positive). */
@@ -103,6 +105,8 @@ export function marketRisks(snap: Snapshot & { betas?: Record<string, number> },
       beta: snap.betas?.[m.symbol] ?? 1,
       positions: 0,
       accounts: 0,
+      longs: 0,
+      shorts: 0,
       longUsd: 0,
       shortUsd: 0,
       nearestLong: null,
@@ -119,10 +123,16 @@ export function marketRisks(snap: Snapshot & { betas?: Record<string, number> },
     if (!row) continue;
     row.positions++;
     accts.get(r.pos.symbol)!.add(r.account.key);
-    if (r.side === "long") row.longUsd += r.notional;
-    else row.shortUsd += r.notional;
+    if (r.side === "long") {
+      row.longs++;
+      row.longUsd += r.notional;
+    } else {
+      row.shorts++;
+      row.shortUsd += r.notional;
+    }
     const d = r.liqDistance;
-    if (d === null) continue;
+    // Positions already past maintenance are anomalies, not the next domino.
+    if (d === null || r.level === "liquidate" || r.level === "bankrupt") continue;
     if (r.side === "long") {
       if (row.nearestLong === null || d > row.nearestLong) row.nearestLong = d;
       if (d >= -0.1) row.longLiqUsd10 += r.notional;
