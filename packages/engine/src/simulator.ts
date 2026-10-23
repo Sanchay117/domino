@@ -5,7 +5,7 @@
 // deterministic queue, risk-scaled partial IOCs at the neutral-price bound, attempt 5 full close,
 // then the Insurance Fund or Type 1 ADL backstop.
 
-import { SimBook, type Fill } from "./book.ts";
+import { SimBook, type Fill, type TaggedFill } from "./book.ts";
 import { adaptiveLiquidationFee, attemptSize, iocLimit, MAX_ATTEMPTS, neutralPrice } from "./liquidation.ts";
 import { clamp, crossProfile, isolatedProfile, liqAndBankruptcy, positionState, type Profile, type PositionState } from "./math.ts";
 import { basisSample, BASIS_SAMPLES, markPrice, pushBasis } from "./prices.ts";
@@ -43,6 +43,22 @@ export interface SimParams {
   markModel: "strike" | "index";
   /** Record the top of the simulated book every tick for these symbols (for visualisation). */
   recordBooks?: string[];
+  /** Extra limit orders resting in the book from t0, e.g. a liquidity strategy being evaluated. */
+  resting?: RestingOrder[];
+}
+
+export interface RestingOrder {
+  symbol: string;
+  side: "bid" | "ask";
+  price: number;
+  size: number;
+  /** Groups fills in `SimResult.restingFills`; defaults to "resting". */
+  tag?: string;
+}
+
+export interface RestingFill extends TaggedFill {
+  t: number;
+  symbol: string;
 }
 
 export const DEFAULT_PARAMS: SimParams = {
@@ -72,6 +88,8 @@ export interface SimEvent {
   requested?: number;
   price: number;
   notional: number;
+  /** The IOC's limit price (liquidation and no_fill events). */
+  limit?: number;
   attempt?: number;
   /** Why the position reached the backstop. */
   reason?: "final_attempt" | "bankrupt";
@@ -136,6 +154,8 @@ export interface SimResult {
   totals: SimTotals;
   /** Margin profiles that were already liquidatable or bankrupt in the snapshot (excluded from the replay). */
   preDistressed: string[];
+  /** Fills of `params.resting` orders, in time order. */
+  restingFills: RestingFill[];
 }
 
 interface FundPosition {
@@ -177,6 +197,7 @@ export class Simulator {
   private fates = new Map<number, PositionFate>();
   readonly events: SimEvent[] = [];
   readonly frames: Frame[] = [];
+  readonly restingFills: RestingFill[] = [];
   private totals = { liquidated: 0, insurance: 0, adl: 0, uncovered: 0, noFill: 0, ioc: 0, fees: 0 };
   private maxGap = { symbol: "", pct: 0 };
   /** Profiles already liquidatable or bankrupt in the snapshot; frozen so results reflect only the shock. */
@@ -193,7 +214,10 @@ export class Simulator {
     for (const s of this.symbols) {
       const m = snap.markets[s];
       const book = snap.books[s] ?? { bids: [], asks: [] };
-      this.books[s] = new SimBook(book, m.index, this.params.pegBand);
+      const resting = (this.params.resting ?? [])
+        .filter((r) => r.symbol === s && r.size > 0 && r.price > 0)
+        .map((r) => ({ side: r.side, price: r.price, qty: r.size, tag: r.tag ?? "resting" }));
+      this.books[s] = new SimBook(book, m.index, this.params.pegBand, resting);
       this.index[s] = m.index;
       this.marks[s] = m.mark;
       this.last[s] = m.last || m.mark;
@@ -266,6 +290,8 @@ export class Simulator {
     }
     this.filledThisTick.clear();
     this.cycle();
+    if (this.params.resting?.length)
+      for (const s of this.symbols) for (const f of this.books[s].drainTaggedFills()) this.restingFills.push({ ...f, t: this.t, symbol: s });
     this.recordFrame();
   }
 
@@ -378,6 +404,7 @@ export class Simulator {
       requested: q,
       price: filled.qty > 0 ? filled.notional / filled.qty : limit,
       notional: filled.notional,
+      limit,
       attempt,
     });
 
@@ -537,6 +564,7 @@ export class Simulator {
       events: this.events,
       fates,
       preDistressed: [...this.preDistressed],
+      restingFills: this.restingFills,
       totals: {
         liquidatedNotional: this.totals.liquidated,
         insuranceNotional: this.totals.insurance,

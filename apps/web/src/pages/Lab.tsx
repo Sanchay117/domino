@@ -5,11 +5,13 @@ import {
   simulate,
   singleScenario,
   type NormalizedSnapshot,
+  type RestingOrder,
   type Shape,
   type SimParams,
   type SimResult,
 } from "@domino/engine";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CatchPanel from "../components/CatchPanel.tsx";
 import EventFeed from "../components/EventFeed.tsx";
 import Ladder from "../components/Ladder.tsx";
 import PriceChart from "../components/PriceChart.tsx";
@@ -62,6 +64,9 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
   const [result, setResult] = useState<SimResult | null>(null);
   const [focus, setFocusState] = useState<string>(cfg.symbol);
   const [ms, setMs] = useState(0);
+  // Resting orders from the Catch panel; kept in a ref too so runs scheduled from effects see the latest value.
+  const catchRef = useRef<RestingOrder[] | null>(null);
+  const [catchOrders, setCatchOrders] = useState<RestingOrder[] | null>(null);
 
   // The replay is deterministic, so focusing another market just re-runs it while recording that market's book.
   const run = (c: Config, recordSym: string): SimResult => {
@@ -76,14 +81,29 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
       ifNotionalMultiple: c.slpMultiple,
       markModel: c.markModel,
       recordBooks: [recordSym],
+      resting: catchRef.current ?? undefined,
     });
   };
   const setFocus = (s: string) => {
     setFocusState(s);
-    if (result && !result.frames[0].books?.[s]) setResult(run(cfg, s));
+    // Catch orders belong to the market they were planned for, so focusing another one drops them.
+    if (catchRef.current) {
+      catchRef.current = null;
+      setCatchOrders(null);
+      setResult(run(cfg, s));
+    } else if (result && !result.frames[0].books?.[s]) setResult(run(cfg, s));
+  };
+  const applyCatch = (orders: RestingOrder[] | null) => {
+    catchRef.current = orders;
+    setCatchOrders(orders);
+    setResult(run(cfg, focus));
+    setT(0);
+    setPlaying(true);
   };
 
   useEffect(() => {
+    catchRef.current = null;
+    setCatchOrders(null);
     const id = setTimeout(() => {
       const t0 = performance.now();
       const r = run(cfg, cfg.symbol);
@@ -279,6 +299,10 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
             </table>
           </div>
         )}
+
+        {result && result.totals.positionsHit > 0 && (
+          <CatchPanel snap={snap} scenario={result.scenario} params={result.params} symbol={focus} applied={catchOrders !== null} onApply={applyCatch} />
+        )}
       </div>
 
       <div className="grid" style={{ alignContent: "start" }}>
@@ -316,6 +340,11 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
                   )}
                   . Worst mark dislocation: {pct(tot.maxMarkGap.pct, 2)} on {base(tot.maxMarkGap.symbol || cfg.symbol)}.
                 </>
+              )}
+              {catchOrders && (
+                <span className="badge ok" style={{ marginLeft: 8 }}>
+                  with {catchOrders.length} catch order{catchOrders.length > 1 ? "s" : ""} resting in {base(catchOrders[0].symbol)}
+                </span>
               )}
             </p>
             <div className="stats" style={{ marginTop: 14, marginBottom: 0 }}>

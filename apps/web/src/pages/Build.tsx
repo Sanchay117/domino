@@ -1,7 +1,11 @@
 import { validateAgainstServed, type NormalizedSnapshot } from "@domino/engine";
 import { useMemo } from "react";
 
-const MCP_CONFIG = `{
+const MCP_CONFIG = `# Claude Code
+claude mcp add domino -- npx tsx /path/to/domino/apps/mcp/src/server.ts
+
+# Claude Desktop or any MCP client
+{
   "mcpServers": {
     "domino": {
       "command": "npx",
@@ -28,8 +32,8 @@ npm run guardian -- protect --address addr1q… --survive 15 --watch 30
 STRIKE_API_PUBLIC_KEY=… STRIKE_API_PRIVATE_KEY=… \\
 npm run guardian -- protect --address addr1q… --survive 15 --watch 30 --live
 
-# provide liquidity where the cascade will need it
-npm run guardian -- catch --symbol BTC-USD --budget 2000 --shock 12`;
+# rest bids where a 30% ADA crash's liquidation IOCs run out of book
+npm run guardian -- catch --symbol ADA-USD --shock 30 --budget 10000`;
 
 const TESTS = [
   "Partial liquidation: 1 BTC @ $50k at 125% margin ratio → 0.5 BTC first IOC",
@@ -47,6 +51,8 @@ const TESTS = [
   "Size is conserved: closed = liquidated + backstopped + deleveraged",
   "Deeper crashes never liquidate less",
   "ADL queue ordered by profit % × effective leverage",
+  "A resting order the market never reaches changes nothing",
+  "Catch orders take flow off the SLP and never overfill",
   "Empty-body hash and Ed25519 signatures verify",
 ];
 
@@ -76,8 +82,8 @@ export default function Build({ snap }: { snap: NormalizedSnapshot }) {
           <h2>MCP server for AI agents</h2>
           <p className="sub">
             Tools: <span className="num">market_risk</span>, <span className="num">stress_test</span>, <span className="num">position_xray</span>,{" "}
-            <span className="num">liquidation_ladder</span>, <span className="num">derisk_plan</span>. Ask Claude "what happens to my Strike book if BTC drops
-            15%?" and it runs the replay.
+            <span className="num">liquidation_ladder</span>, <span className="num">derisk_plan</span>, <span className="num">catch_plan</span>. Ask Claude "what
+            happens to my Strike book if BTC drops 15%?" and it runs the replay.
           </p>
           <pre className="code">{MCP_CONFIG}</pre>
         </div>

@@ -5,6 +5,7 @@ import {
   findPositions,
   generateApiWallet,
   positionRisks,
+  stepString,
   StrikeClient,
   survivalShock,
   type DeriskPlan,
@@ -227,7 +228,7 @@ function GuardianPlan({ snap, risk }: { snap: NormalizedSnapshot; risk: Position
     return () => clearTimeout(id);
   }, [snap, risk.pos.id, risk.pos.symbol, target]);
 
-  const reduce = plan && plan.reduceSize > 0 ? String(+plan.reduceSize.toPrecision(10)) : null;
+  const reduce = plan && plan.reduceSize > 0 ? stepString(plan.reduceSize, snap.markets[risk.pos.symbol].step) : null;
   const prepared = useMemo(
     () =>
       reduce

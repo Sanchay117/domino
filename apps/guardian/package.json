@@ -1,0 +1,13 @@
+{
+  "name": "@domino/guardian",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Guardian: a Strike Finance bot that keeps positions out of the liquidation cascade and rests liquidity where cascades need it.",
+  "scripts": {
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@domino/engine": "*"
+  }
+}

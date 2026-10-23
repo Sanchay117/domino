@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   adlQueue,
   attemptSize,
+  catchPlan,
   classify,
   correlatedScenario,
   crossProfile,
@@ -157,6 +158,24 @@ describe("live mainnet snapshot", () => {
   it("ADL queue ranks profitable positions by profit % × effective leverage", () => {
     const q = adlQueue(snap, "ADA-USD", "short");
     for (let i = 1; i < q.length; i++) expect(q[i - 1].score).toBeGreaterThanOrEqual(q[i].score);
+  });
+
+  it("a resting order the market never reaches changes nothing", () => {
+    const scenario = correlatedScenario(snap, -0.2);
+    const far = snap.markets["BTC-USD"].index * 0.5;
+    const base = simulate(snap, scenario);
+    const r = simulate(snap, scenario, { resting: [{ symbol: "BTC-USD", side: "bid", price: far, size: 1 }] });
+    expect(r.restingFills).toHaveLength(0);
+    expect(r.totals).toEqual(base.totals);
+  });
+
+  it("resting bids at the IOC limits take flow off the SLP and never overfill", () => {
+    const p = catchPlan(snap, "BTC-USD", -0.2, 50_000, (s) => correlatedScenario(snap, s));
+    expect(p).not.toBeNull();
+    expect(p!.orders.length).toBeGreaterThan(0);
+    expect(p!.after.insuranceNotional).toBeLessThan(p!.before.insuranceNotional);
+    expect(p!.filled.qty).toBeLessThanOrEqual(p!.orders.reduce((s, o) => s + o.size, 0) + 1e-9);
+    expect(p!.filled.notional).toBeLessThanOrEqual(50_000 + 1e-6);
   });
 });
 

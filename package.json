@@ -15,7 +15,8 @@
     "typecheck": "tsc -p packages/engine && tsc -p apps/web && tsc -p apps/guardian && tsc -p apps/mcp",
     "snapshot": "tsx scripts/snapshot.ts",
     "guardian": "tsx apps/guardian/src/cli.ts",
-    "mcp": "tsx apps/mcp/src/server.ts"
+    "mcp": "tsx apps/mcp/src/server.ts",
+    "smoke:mcp": "tsx scripts/mcp-smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

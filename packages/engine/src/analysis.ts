@@ -1,6 +1,6 @@
 // Read-only risk analytics on a snapshot, plus scenario builders and search helpers on top of the simulator.
 
-import { allProfiles, ceilToStep, liqAndBankruptcy, positionState, type Profile, type PositionState, type RiskLevel } from "./math.ts";
+import { allProfiles, ceilToStep, floorToStep, liqAndBankruptcy, positionState, type Profile, type PositionState, type RiskLevel } from "./math.ts";
 import { simulate, type Scenario, type Shape, type SimParams, type SimResult } from "./simulator.ts";
 import type { Account, Position, Snapshot } from "./types.ts";
 
@@ -321,6 +321,135 @@ export function deriskPlan(snap: Snapshot, positionId: number, make: (signedShoc
   }
   const reduceSize = Math.min(Math.abs(pos.size), ceilToStep(Math.abs(pos.size) * hi, m.step));
   return { ...base, reduceSize, reduceFraction: reduceSize / Math.abs(pos.size), survivesWithoutAction: false };
+}
+
+export interface CatchOrder {
+  price: number;
+  size: number;
+}
+
+export interface CatchPlan {
+  symbol: string;
+  /** "bid" catches long liquidations in a crash, "ask" catches short liquidations in a squeeze. */
+  side: "bid" | "ask";
+  shock: number;
+  budget: number;
+  orders: CatchOrder[];
+  /** Liquidation size the book never absorbed in the baseline (it went to the SLP or ADL instead). */
+  unabsorbed: number;
+  before: SimResult["totals"];
+  after: SimResult["totals"];
+  filled: { qty: number; notional: number; avgPrice: number; byLiquidation: number; byArb: number };
+  /** Σ size × (mark at fill − fill price) for bids (mirrored for asks): the liquidation discount captured. */
+  discount: number;
+  /** Mark at the end of the scenario, and the filled inventory's PnL marked there. */
+  endMark: number;
+  pnlAtEnd: number;
+  /** How far beyond the IOC limits the chosen orders sit (fraction of price). */
+  cushion: number;
+}
+
+export interface CatchPlanOptions {
+  params?: Partial<SimParams>;
+  maxOrders?: number;
+  /** Cushions beyond the IOC limit to try; the one that keeps the most flow off the backstop wins. */
+  cushions?: number[];
+}
+
+/**
+ * Where should a liquidity provider rest orders so this cascade clears through the book instead of
+ * the SLP? Replays the scenario, finds each position's first liquidation IOC that the book could not
+ * fill, prices resting orders at those IOC limits (so the IOC would have matched them), sizes them
+ * within `budget` USD of notional, then replays again with the orders in the book to measure the effect.
+ *
+ * The IOC limits are themselves moved by the new liquidity (more depth shifts the mark and with it the
+ * neutral price), so orders priced exactly at the old limits can miss by a tick and end up taken by
+ * arbitrage instead. A few cushions are tried and the one that leaves the least on the backstop wins.
+ */
+export function catchPlan(
+  snap: Snapshot,
+  symbol: string,
+  shock: number,
+  budget: number,
+  make: (signedShock: number) => Scenario,
+  { params = {}, maxOrders = 6, cushions = [0, 0.001, 0.0025, 0.005, 0.01] }: CatchPlanOptions = {},
+): CatchPlan | null {
+  const m = snap.markets[symbol];
+  if (!m || shock === 0 || !(budget > 0)) return null;
+  const liquidated = shock < 0 ? "long" : "short";
+  const side: "bid" | "ask" = shock < 0 ? "bid" : "ask";
+  const scenario = make(shock);
+  const before = simulate(snap, scenario, params);
+
+  // Each position's first IOC with an unfilled remainder; everything it later sent to the backstop is the demand at that limit.
+  const firstGap = new Map<number, number>();
+  for (const e of before.events) {
+    if (e.symbol !== symbol || e.side !== liquidated || e.limit === undefined || firstGap.has(e.positionId)) continue;
+    if ((e.requested ?? 0) - e.size > 1e-12) firstGap.set(e.positionId, e.limit);
+  }
+  const demand: { limit: number; qty: number }[] = [];
+  for (const f of before.fates) {
+    const limit = firstGap.get(f.positionId);
+    const qty = f.backstopped;
+    if (limit !== undefined && qty > 0) demand.push({ limit, qty });
+  }
+  const unabsorbed = demand.reduce((s, d) => s + d.qty, 0);
+
+  // Cluster limits within 0.5% of each other, best price first; a bucket's order sits at its most demanding limit.
+  demand.sort((a, b) => (side === "bid" ? b.limit - a.limit : a.limit - b.limit));
+  const buckets: { price: number; qty: number }[] = [];
+  for (const d of demand) {
+    const b = buckets[buckets.length - 1];
+    if (b && Math.abs(d.limit / b.price - 1) <= 0.005) b.qty += d.qty;
+    else buckets.push({ price: d.limit, qty: d.qty });
+  }
+  const chosen = buckets.sort((a, b) => b.price * b.qty - a.price * a.qty).slice(0, maxOrders);
+  const dir = side === "bid" ? 1 : -1;
+  const ordersAt = (cushion: number): CatchOrder[] => {
+    const priced = chosen.map((b) => ({ price: side === "bid" ? ceilToStep(b.price * (1 + cushion), m.tick) : floorToStep(b.price * (1 - cushion), m.tick), qty: b.qty }));
+    const demandUsd = priced.reduce((s, b) => s + b.price * b.qty, 0);
+    const scale = demandUsd > 0 ? Math.min(1, budget / demandUsd) : 0;
+    return priced
+      .map((b) => ({ price: b.price, size: floorToStep(b.qty * scale, m.step) }))
+      .filter((o) => o.size > 0)
+      .sort((a, b) => (side === "bid" ? b.price - a.price : a.price - b.price));
+  };
+  const replay = (orders: CatchOrder[]) => simulate(snap, scenario, { ...params, resting: orders.map((o) => ({ symbol, side, price: o.price, size: o.size, tag: "catch" })) });
+  const backstopped = (r: SimResult) => r.totals.insuranceNotional + r.totals.adlNotional + r.totals.uncoveredNotional;
+
+  let best: { cushion: number; orders: CatchOrder[]; after: SimResult } | null = null;
+  for (const cushion of chosen.length ? cushions : [0]) {
+    const orders = ordersAt(cushion);
+    const after = replay(orders);
+    if (!best || backstopped(after) < backstopped(best.after) - 1) best = { cushion, orders, after };
+  }
+  const { cushion, orders, after } = best!;
+  const fills = after.restingFills.filter((f) => f.tag === "catch");
+  const qty = fills.reduce((s, f) => s + f.qty, 0);
+  const notional = fills.reduce((s, f) => s + f.qty * f.price, 0);
+  const endMark = after.frames[after.frames.length - 1]?.symbols[symbol]?.mark ?? m.mark;
+  const markAt = (t: number) => after.frames[Math.min(t, after.frames.length - 1)]?.symbols[symbol]?.mark ?? m.mark;
+  return {
+    symbol,
+    side,
+    shock,
+    budget,
+    orders,
+    unabsorbed,
+    before: before.totals,
+    after: after.totals,
+    filled: {
+      qty,
+      notional,
+      avgPrice: qty > 0 ? notional / qty : 0,
+      byLiquidation: fills.filter((f) => f.by === "liquidation").reduce((s, f) => s + f.qty, 0),
+      byArb: fills.filter((f) => f.by === "arb").reduce((s, f) => s + f.qty, 0),
+    },
+    discount: fills.reduce((s, f) => s + dir * f.qty * (markAt(f.t) - f.price), 0),
+    endMark,
+    pnlAtEnd: dir * (endMark * qty - notional),
+    cushion,
+  };
 }
 
 export interface AdlEntry {

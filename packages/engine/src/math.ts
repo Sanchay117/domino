@@ -133,3 +133,10 @@ export function median3(a: number, b: number, c: number): number {
 }
 
 export const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
+
+/** `x` as a decimal string with exactly as many decimals as `step` (Strike's size and price fields are strings). */
+export function stepString(x: number, step: number): string {
+  const s = step.toString();
+  const decimals = s.includes("e-") ? Number(s.split("e-")[1]) + (s.split("e-")[0].split(".")[1]?.length ?? 0) : (s.split(".")[1]?.length ?? 0);
+  return x.toFixed(decimals);
+}

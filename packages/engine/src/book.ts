@@ -14,6 +14,8 @@ interface SimLevel {
   abs: number;
   qty: number;
   orig: number;
+  /** Set on orders injected through `SimParams.resting`, so their fills can be attributed. */
+  tag?: string;
 }
 
 export interface Fill {
@@ -21,17 +23,50 @@ export interface Fill {
   qty: number;
 }
 
+/** A user limit order added to the book at t0 (always static: it does not re-peg). */
+export interface RestingLevel {
+  side: "bid" | "ask";
+  price: number;
+  qty: number;
+  tag: string;
+}
+
+export interface TaggedFill {
+  tag: string;
+  side: "bid" | "ask";
+  price: number;
+  qty: number;
+  /** Who took it: a liquidation IOC, or arbitrage once the index moved through the price. */
+  by: "liquidation" | "arb";
+}
+
 export class SimBook {
   private bids: SimLevel[];
   private asks: SimLevel[];
   private index: number;
+  private tagged: TaggedFill[] = [];
 
-  constructor(book: Book, index0: number, pegBand: number) {
+  constructor(book: Book, index0: number, pegBand: number, resting: RestingLevel[] = []) {
     const mid = book.bids.length && book.asks.length ? (book.bids[0][0] + book.asks[0][0]) / 2 : index0;
     const mk = ([p, q]: Level): SimLevel => ({ pegged: Math.abs(p / mid - 1) <= pegBand, rel: p / index0, abs: p, qty: q, orig: q });
     this.bids = book.bids.map(mk);
     this.asks = book.asks.map(mk);
+    for (const r of resting) {
+      const l: SimLevel = { pegged: false, rel: r.price / index0, abs: r.price, qty: r.qty, orig: r.qty, tag: r.tag };
+      (r.side === "bid" ? this.bids : this.asks).push(l);
+    }
     this.index = index0;
+  }
+
+  /** Fills of tagged (injected) orders since the last call. */
+  drainTaggedFills(): TaggedFill[] {
+    const out = this.tagged;
+    this.tagged = [];
+    return out;
+  }
+
+  private record(l: SimLevel, side: "bid" | "ask", price: number, qty: number, by: TaggedFill["by"]): void {
+    if (l.tag !== undefined && qty > 1e-12) this.tagged.push({ tag: l.tag, side, price, qty, by });
   }
 
   private priceOf(l: SimLevel): number {
@@ -52,6 +87,7 @@ export class SimBook {
         l.qty = l.qty > target ? target : l.qty + (target - l.qty) * refillPerSec;
       } else if (l.qty > 0 && l.abs > index) {
         arbitraged += l.abs * l.qty;
+        this.record(l, "bid", l.abs, l.qty, "arb");
         l.qty = 0;
       }
     }
@@ -61,6 +97,7 @@ export class SimBook {
         l.qty = l.qty > target ? target : l.qty + (target - l.qty) * refillPerSec;
       } else if (l.qty > 0 && l.abs < index) {
         arbitraged += l.abs * l.qty;
+        this.record(l, "ask", l.abs, l.qty, "arb");
         l.qty = 0;
       }
     }
@@ -106,6 +143,7 @@ export class SimBook {
       if (remaining <= 1e-12) break;
       if (side === "bids" ? p < limit - 1e-12 : p > limit + 1e-12) break;
       const q = Math.min(l.qty, remaining);
+      this.record(l, side === "bids" ? "bid" : "ask", p, q, "liquidation");
       l.qty -= q;
       remaining -= q;
       fills.push({ price: p, qty: q });
