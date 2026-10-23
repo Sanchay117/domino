@@ -5,8 +5,8 @@ import { Sfx, tock } from "../components/Sfx";
 import { sceneById, wordAt } from "../data";
 import { C, mono, sans } from "../theme";
 
-/** Shown on the end card once the repository is public. */
-export const REPO_URL = "";
+/** Shown on the end card. */
+export const REPO_URL = "github.com/Sanchay117/domino";
 
 const PILLARS = [
   { title: "Dashboard", sub: "Risk Radar · Cascade Lab · Catch · X-Ray", color: C.mint, icon: "chart" },
