@@ -80,7 +80,7 @@ export default function Radar({ snap }: { snap: NormalizedSnapshot }) {
             Each point is a full cascade replay: BTC moves by the x-axis amount over 3 minutes and every other market follows with its beta. Stacked:
             where the liquidated notional ends up. {curve.done ? "" : `Simulating ${curve.points.length}/${SHOCKS.length}…`}
           </p>
-          <StressCurve points={curve.points} range={RANGE} onPick={(shock) => go("lab", { mode: "corr", symbol: "BTC-USD", shock: shock.toFixed(2) })} />
+          <StressCurve points={curve.points} range={RANGE} height={390} onPick={(shock) => go("lab", { mode: "corr", symbol: "BTC-USD", shock: shock.toFixed(2) })} />
         </div>
         <div className="panel">
           <h2>What Domino sees right now</h2>

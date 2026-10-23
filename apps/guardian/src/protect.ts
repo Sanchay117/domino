@@ -44,7 +44,7 @@ async function protectOnce(
   const ids = new Set(findPositions(snap, o.query).filter((p) => !o.symbol || p.symbol === o.symbol).map((p) => p.id));
   const risks = positionRisks(snap).filter((r) => ids.has(r.pos.id));
   const at = new Date(snap.fetchedAt).toISOString().slice(11, 19);
-  heading(`Guardian · cycle ${cycle} · ${at} UTC · survive a ${pct(o.survive, 0)} cascade ${o.live ? c.red("LIVE") : c.dim("dry run")}`);
+  heading(`Guardian · cycle ${cycle} · ${at} UTC · survive a ${Math.round(o.survive * 100)}% cascade ${o.live ? c.red("LIVE") : c.dim("dry run")}`);
   if (!risks.length) {
     console.log(c.yellow(`No open positions for ${o.query}${o.symbol ? ` in ${o.symbol}` : ""}.`));
     return;

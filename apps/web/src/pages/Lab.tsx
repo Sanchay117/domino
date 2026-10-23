@@ -52,6 +52,8 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
   const [cfg, setCfg] = useState<Config>(() => fromParams(snap, params));
   useEffect(() => setCfg(fromParams(snap, params)), [snap, params]);
   const set = <K extends keyof Config>(k: K, v: Config[K]) => setCfg((c) => ({ ...c, [k]: v }));
+  // Wall-clock seconds for a full playback; `?play=` overrides it (slower playback for recordings).
+  const playSeconds = Number(params.get("play") ?? new URLSearchParams(location.search).get("play")) || PLAY_SECONDS;
 
   const symbols = useMemo(() => {
     const withPos = new Set(snap.accounts.flatMap((a) => a.positions.map((p) => p.symbol)));
@@ -129,7 +131,7 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
       const dt = (now - last) / 1000;
       last = now;
       setT((cur) => {
-        const nt = Math.min(T, cur + (dt * T) / PLAY_SECONDS);
+        const nt = Math.min(T, cur + (dt * T) / playSeconds);
         if (nt >= T) setPlaying(false);
         return nt;
       });
@@ -258,7 +260,7 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
             </div>
           </details>
           <div className="dim" style={{ fontSize: 12 }}>
-            {result ? `${result.frames.length - 1} mark batches replayed in ${ms.toFixed(0)} ms` : "Simulating…"}
+            {result ? `${result.frames.length - 1} mark batches replayed${ms >= 1 ? ` in ${ms.toFixed(0)} ms` : ""}` : "Simulating…"}
           </div>
         </div>
 

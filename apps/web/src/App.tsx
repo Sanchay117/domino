@@ -52,7 +52,7 @@ export default function App() {
             <>
               <span className={`dot ${state.live ? "" : "off"}`} />
               <span>
-                {state.live ? "Live Strike mainnet" : "Offline fixture"} · {ago(state.snap.fetchedAt)}
+                {state.live ? "Live Strike mainnet" : "Strike mainnet snapshot"} · {ago(state.snap.fetchedAt)}
               </span>
               <button className="btn" style={{ height: 28, fontSize: 12 }} onClick={() => setReload((x) => x + 1)}>
                 Refresh

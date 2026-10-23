@@ -16,7 +16,7 @@ export function useStressCurve(snap: NormalizedSnapshot, shocks: number[], param
       const shock = order[i++];
       const result = simulate(snap, correlatedScenario(snap, shock), params).totals;
       setPoints((p) => [...p, { shock, result }]);
-      setTimeout(next, 0);
+      setTimeout(next, 16);
     };
     const id = setTimeout(next, 30);
     return () => {
