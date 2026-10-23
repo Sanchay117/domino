@@ -1,0 +1,242 @@
+{
+  "fps": 30,
+  "total": 172.99999999999997,
+  "scenes": [
+    {
+      "id": "open",
+      "start": 0,
+      "seconds": 18.333333333333332,
+      "frames": 550,
+      "lines": [
+        {
+          "file": "audio/open-1.wav",
+          "text": "On a perpetuals exchange, a liquidation is never just one liquidation.",
+          "start": 1.6,
+          "seconds": 4.839979166666667
+        },
+        {
+          "file": "audio/open-2.wav",
+          "text": "It sells into the book, the bids thin out, the mark slips, and the next position falls.",
+          "start": 6.7599791666666675,
+          "seconds": 5.6399791666666665
+        },
+        {
+          "file": "audio/open-3.wav",
+          "text": "Domino lets you watch that chain reaction on Strike Finance, before it happens.",
+          "start": 12.719958333333334,
+          "seconds": 4.799979166666667
+        }
+      ]
+    },
+    {
+      "id": "engine",
+      "start": 18.333333333333332,
+      "seconds": 26.8,
+      "frames": 804,
+      "lines": [
+        {
+          "file": "audio/engine-1.wav",
+          "text": "Strike liquidates carefully.",
+          "start": 0.4,
+          "seconds": 2.0399791666666665
+        },
+        {
+          "file": "audio/engine-2.wav",
+          "text": "A position is closed in up to five staged IOC orders, each bounded by a neutral price that protects the trader.",
+          "start": 2.759979166666666,
+          "seconds": 6.6399791666666665
+        },
+        {
+          "file": "audio/engine-3.wav",
+          "text": "Whatever the book can't absorb goes to the SLP vault, and when that's full, profitable traders on the other side are auto-deleveraged.",
+          "start": 9.719958333333333,
+          "seconds": 7.359979166666666
+        },
+        {
+          "file": "audio/engine-4.wav",
+          "text": "Domino ports every one of those rules to TypeScript, and replays them second by second, against every live position and the real order books.",
+          "start": 17.3999375,
+          "seconds": 8.799979166666667
+        }
+      ]
+    },
+    {
+      "id": "proof",
+      "start": 45.13333333333333,
+      "seconds": 12.433333333333334,
+      "frames": 373,
+      "lines": [
+        {
+          "file": "audio/proof-1.wav",
+          "text": "Before simulating anything, it checks itself.",
+          "start": 0.3,
+          "seconds": 2.7999791666666667
+        },
+        {
+          "file": "audio/proof-2.wav",
+          "text": "From public API data alone, Domino reproduces all 472 liquidation prices Strike serves. Exactly.",
+          "start": 3.4199791666666663,
+          "seconds": 7.999979166666667
+        }
+      ]
+    },
+    {
+      "id": "radar",
+      "start": 57.56666666666666,
+      "seconds": 24.833333333333332,
+      "frames": 745,
+      "lines": [
+        {
+          "file": "audio/radar-1.wav",
+          "text": "The Risk Radar runs twenty full cascade replays and draws the exchange's stress curve.",
+          "start": 0.5,
+          "seconds": 5.359979166666666
+        },
+        {
+          "file": "audio/radar-2.wav",
+          "text": "In a 20% crash led by Bitcoin, 94 accounts get hit: $470k clears through the order book, and $132k lands on the SLP.",
+          "start": 6.179979166666667,
+          "seconds": 11.399979166666666
+        },
+        {
+          "file": "audio/radar-3.wav",
+          "text": "Below it, every market: where its next liquidation sits, and how much bid liquidity stands in front of it.",
+          "start": 17.899958333333334,
+          "seconds": 6.119979166666667
+        }
+      ]
+    },
+    {
+      "id": "lab",
+      "start": 82.39999999999999,
+      "seconds": 21.4,
+      "frames": 642,
+      "lines": [
+        {
+          "file": "audio/lab-1.wav",
+          "text": "Click the curve, and the Cascade Lab plays that crash back, one mark-price batch at a time.",
+          "start": 0.4,
+          "seconds": 6.199979166666667
+        },
+        {
+          "file": "audio/lab-2.wav",
+          "text": "Above the axis, liquidation IOCs eat the resting bids. Below it, positions turn red as the cascade reaches them.",
+          "start": 6.919979166666668,
+          "seconds": 7.5999791666666665
+        },
+        {
+          "file": "audio/lab-3.wav",
+          "text": "And every IOC, SLP transfer and ADL fill lands in the log, in engine order.",
+          "start": 14.839958333333335,
+          "seconds": 5.759979166666667
+        }
+      ]
+    },
+    {
+      "id": "catch",
+      "start": 103.79999999999998,
+      "seconds": 21,
+      "frames": 630,
+      "lines": [
+        {
+          "file": "audio/catch-1.wav",
+          "text": "So where is liquidity missing?",
+          "start": 0.4,
+          "seconds": 1.9999791666666666
+        },
+        {
+          "file": "audio/catch-2.wav",
+          "text": "Domino finds the IOC limits the book could not fill, and prices post-only bids right there.",
+          "start": 2.7199791666666666,
+          "seconds": 6.239979166666667
+        },
+        {
+          "file": "audio/catch-3.wav",
+          "text": "If ADA crashes 30%, $10k of bids moves almost $9k of liquidations off the SLP and back onto the order book.",
+          "start": 9.279958333333333,
+          "seconds": 10.719979166666667
+        }
+      ]
+    },
+    {
+      "id": "xray",
+      "start": 124.79999999999998,
+      "seconds": 12.566666666666666,
+      "frames": 377,
+      "lines": [
+        {
+          "file": "audio/xray-1.wav",
+          "text": "Paste any wallet into Position X-Ray.",
+          "start": 0.4,
+          "seconds": 2.6399791666666665
+        },
+        {
+          "file": "audio/xray-2.wav",
+          "text": "This $103k oil long is 9.5% from liquidation. To survive a 15% cascade, it needs to cut 35%.",
+          "start": 3.3599791666666663,
+          "seconds": 8.599979166666667
+        }
+      ]
+    },
+    {
+      "id": "guardian",
+      "start": 137.36666666666665,
+      "seconds": 9.666666666666666,
+      "frames": 290,
+      "lines": [
+        {
+          "file": "audio/guardian-1.wav",
+          "text": "Guardian turns that into a bot.",
+          "start": 0.3,
+          "seconds": 2.0799791666666665
+        },
+        {
+          "file": "audio/guardian-2.wav",
+          "text": "It signs the reduce-only order with your Strike API wallet, adds a builder fee, and keeps watching.",
+          "start": 2.699979166666666,
+          "seconds": 5.959979166666667
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "start": 147.0333333333333,
+      "seconds": 12.866666666666667,
+      "frames": 386,
+      "lines": [
+        {
+          "file": "audio/mcp-1.wav",
+          "text": "And because agents trade too, Domino ships an MCP server.",
+          "start": 0.4,
+          "seconds": 4.399979166666666
+        },
+        {
+          "file": "audio/mcp-2.wav",
+          "text": "Ask Claude what a 15% crash would do to Strike, and it runs the same replay on live data.",
+          "start": 5.119979166666667,
+          "seconds": 6.519979166666666
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "start": 159.89999999999998,
+      "seconds": 13.1,
+      "frames": 393,
+      "lines": [
+        {
+          "file": "audio/outro-1.wav",
+          "text": "Domino. Open source, no backend, built entirely on the public Strike Finance API.",
+          "start": 0.5,
+          "seconds": 7.359979166666666
+        },
+        {
+          "file": "audio/outro-2.wav",
+          "text": "See the cascade before the market does.",
+          "start": 8.179979166666666,
+          "seconds": 2.3199791666666667
+        }
+      ]
+    }
+  ]
+}

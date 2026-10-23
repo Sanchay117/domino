@@ -1,0 +1,32 @@
+{
+  "name": "domino-video",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The Domino demo video: Remotion motion graphics, Playwright footage of the real app, Deepgram narration.",
+  "scripts": {
+    "facts": "tsx scripts/facts.ts",
+    "tts": "tsx scripts/tts.ts",
+    "words": "tsx scripts/words.ts",
+    "guardian-output": "tsx scripts/guardian-output.ts",
+    "sfx": "tsx scripts/sfx.ts",
+    "capture": "tsx scripts/capture.ts",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Domino out/domino.mp4 --crf 18",
+    "master": "tsx scripts/master.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.538",
+    "@remotion/google-fonts": "^4.0.538",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remotion": "^4.0.538"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "playwright": "^1.64.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "fetchedAt": 1792730788946,
+  "validation": {
+    "matched": 472,
+    "total": 472,
+    "worst": 1.0583902905569672e-13
+  },
+  "openInterest": 2575613.746982749,
+  "positions": 472,
+  "accounts": 214,
+  "marketsWithPositions": 31,
+  "slpEquity": 1034006.4951537771,
+  "btc20": {
+    "liquidatedNotional": 470451.8108724191,
+    "insuranceNotional": 131631.01257484953,
+    "adlNotional": 0,
+    "uncoveredNotional": 0,
+    "noFillAttempts": 4,
+    "iocAttempts": 144,
+    "accountsHit": 94,
+    "positionsHit": 135,
+    "positionsClosed": 135,
+    "liquidationFees": 1590.2522192099993,
+    "insurancePnl": -23771.023202745044,
+    "maxMarkGap": {
+      "symbol": "NIGHT-USD",
+      "pct": -0.00154096993674524
+    }
+  },
+  "btc15": {
+    "liquidatedNotional": 529092.2603438564,
+    "insuranceNotional": 60931.47287211656,
+    "adlNotional": 0,
+    "uncoveredNotional": 0,
+    "noFillAttempts": 0,
+    "iocAttempts": 137,
+    "accountsHit": 80,
+    "positionsHit": 118,
+    "positionsClosed": 118,
+    "liquidationFees": 2142.3196498700004,
+    "insurancePnl": -5444.996980479005,
+    "maxMarkGap": {
+      "symbol": "NIGHT-USD",
+      "pct": -0.004113354064693264
+    }
+  },
+  "firstSlpShock": -0.040000000000000036,
+  "catch": {
+    "symbol": "ADA-USD",
+    "shock": -0.3,
+    "budget": 10000,
+    "orders": [
+      {
+        "price": 0.21094000000000002,
+        "size": 4114
+      },
+      {
+        "price": 0.19956000000000002,
+        "size": 237
+      },
+      {
+        "price": 0.18805000000000002,
+        "size": 742
+      },
+      {
+        "price": 0.17287000000000002,
+        "size": 51744
+      }
+    ],
+    "cushion": 0.01,
+    "before": {
+      "liquidatedNotional": 504924.93830351246,
+      "insuranceNotional": 92866.00100149523,
+      "adlNotional": 0,
+      "uncoveredNotional": 0,
+      "noFillAttempts": 0,
+      "iocAttempts": 143,
+      "accountsHit": 88,
+      "positionsHit": 128,
+      "positionsClosed": 128,
+      "liquidationFees": 1840.9556692699998,
+      "insurancePnl": -14427.014923577854,
+      "maxMarkGap": {
+        "symbol": "NIGHT-USD",
+        "pct": -0.0023424678125002485
+      }
+    },
+    "after": {
+      "liquidatedNotional": 513750.3531283304,
+      "insuranceNotional": 84116.33162458616,
+      "adlNotional": 0,
+      "uncoveredNotional": 0,
+      "noFillAttempts": 0,
+      "iocAttempts": 143,
+      "accountsHit": 88,
+      "positionsHit": 128,
+      "positionsClosed": 128,
+      "liquidationFees": 1912.2604164299994,
+      "insurancePnl": -13364.262797922285,
+      "maxMarkGap": {
+        "symbol": "NIGHT-USD",
+        "pct": -0.0023424678125002485
+      }
+    },
+    "filled": {
+      "qty": 56837,
+      "notional": 9999.62126,
+      "avgPrice": 0.17593506448264334,
+      "byLiquidation": 51744,
+      "byArb": 5093
+    },
+    "pnlAtEnd": -1440.6955986296962
+  },
+  "xray": {
+    "address": "addr1q9w5kcgp4jqmgghc7pw9ksmtvx82e8cwkaxm70tugtxgngr8swahadr23netea6nj50x3whlw0ypvfk3s42cyfsn594s55fvsc",
+    "symbol": "WTI-USD",
+    "side": "long",
+    "notional": 103329.37056269521,
+    "liq": 90.77432450625999,
+    "liqDistance": -0.09516782841303562,
+    "reduceSize": 362.11,
+    "reduceFraction": 0.351569933396765
+  }
+}
