@@ -214,7 +214,8 @@ const { totals, events } = simulate(snap, crash);
 - **Footage**: [Playwright](https://playwright.dev) drives the real app frame by frame under a fake clock, so every capture is deterministic.
 - **Motion graphics**: [Remotion](https://remotion.dev).
 - **Narration**: Deepgram Aura-2. Deepgram speech-to-text then checks the pronunciation and provides word timings, so animations land on the spoken word.
-- **Sound**: the effects and the music bed are synthesized from scratch.
+- **Sound**: the effects, the music bed and the teaser's 120 BPM track are synthesized from scratch.
+- **Teaser**: a 35-second cut for social, edited on the same beat grid as its music (`src/teaserPlan.ts`).
 
 ```bash
 cd video && npm install
@@ -226,6 +227,8 @@ npm run sfx              # synthesized sound effects and music bed
 npm run capture          # deterministic footage of the running app (DOMINO_URL, default http://localhost:5180/)
 npm run render           # out/domino.mp4
 npm run master           # loudness-normalised out/domino-final.mp4
+npm run render:teaser    # out/teaser.mp4
+npm run master:teaser    # out/teaser-final.mp4
 ```
 
 ## Layout

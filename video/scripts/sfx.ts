@@ -9,6 +9,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { readFileSync } from "node:fs";
+import { BEAT, TEASER } from "../src/teaserPlan.ts";
 
 const SR = 48000;
 const TAU = Math.PI * 2;
@@ -143,16 +144,18 @@ const CHORDS = [
 ];
 const BAR = 8;
 
-function bed(seconds: number) {
+/** The pad. Chord `b` starts at `offset + b × bar` seconds and is CHORDS[(b + first) % 4]. */
+function bed(seconds: number, bar = BAR, offset = 0, first = 0) {
   const n = Math.floor(SR * seconds);
   const L = new Float32Array(n);
   const R = new Float32Array(n);
   const voices: { f: number; start: number; dur: number; pan: number; amp: number }[] = [];
-  for (let b = 0; b * BAR < seconds + BAR; b++) {
-    const chord = CHORDS[b % CHORDS.length];
+  for (let b = 0; offset + b * bar < seconds + bar; b++) {
+    const chord = CHORDS[(b + first) % CHORDS.length];
+    const swell = Math.min(1.5, bar * 0.2);
     for (const [k, m] of chord.entries()) {
       for (const det of [-0.06, 0, 0.06]) {
-        voices.push({ f: hz(m + det), start: b * BAR - 1.5, dur: BAR + 3, pan: (k / (chord.length - 1) - 0.5) * 0.7 + det * 2, amp: k === 0 ? 0.5 : 0.28 });
+        voices.push({ f: hz(m + det), start: offset + b * bar - swell, dur: bar + 2 * swell, pan: (k / (chord.length - 1) - 0.5) * 0.7 + det * 2, amp: k === 0 ? 0.5 : 0.28 });
       }
     }
   }
@@ -219,6 +222,124 @@ function reverb(x: Float32Array, ch: number) {
   return out;
 }
 
+// --- teaser track: the pad plus drums and bass on the shared beat grid --------------------------
+
+function kick(): Float32Array {
+  const n = Math.floor(SR * 0.4);
+  const x = new Float32Array(n);
+  let ph = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    ph += (TAU * (48 + 110 * Math.exp(-t / 0.035))) / SR;
+    x[i] = Math.sin(ph) * Math.exp(-t / 0.22) + 0.25 * rand() * Math.exp(-t / 0.003);
+  }
+  return x;
+}
+
+function snare(): Float32Array {
+  const n = Math.floor(SR * 0.25);
+  const noise = Float32Array.from({ length: n }, () => rand());
+  const body = svf(noise, () => 1900, 0.9, "bp");
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    body[i] = 1.6 * body[i] * Math.exp(-t / 0.09) + 0.5 * Math.sin(TAU * 190 * t) * Math.exp(-t / 0.05);
+  }
+  return body;
+}
+
+function hat(): Float32Array {
+  const n = Math.floor(SR * 0.06);
+  const noise = Float32Array.from({ length: n }, () => rand());
+  const hp = svf(noise, () => 7500, 0.8, "hp");
+  for (let i = 0; i < n; i++) hp[i] *= Math.exp(-i / SR / 0.018);
+  return hp;
+}
+
+function crash(): Float32Array {
+  const n = Math.floor(SR * 1.6);
+  const noise = Float32Array.from({ length: n }, () => rand());
+  const hp = svf(noise, () => 5000, 0.7, "hp");
+  for (let i = 0; i < n; i++) hp[i] *= Math.exp(-i / SR / 0.45);
+  return hp;
+}
+
+function riser(seconds: number): Float32Array {
+  const n = Math.floor(SR * seconds);
+  const noise = Float32Array.from({ length: n }, () => rand());
+  const bp = svf(noise, (i) => 300 + 6000 * (i / n) ** 2, 0.5, "bp");
+  for (let i = 0; i < n; i++) bp[i] *= (i / n) ** 2;
+  return bp;
+}
+
+function add(dst: Float32Array, src: Float32Array, at: number, gain: number) {
+  const i0 = Math.floor(at * SR);
+  for (let i = 0; i < src.length && i0 + i < dst.length; i++) dst[i0 + i] += src[i] * gain;
+}
+
+function teaserTrack() {
+  const { seconds, drop, end } = TEASER;
+  // Chords change every two bars, landing on A minor at the drop.
+  const [padL, padR] = bed(seconds, 4 * BEAT * 2, drop - 8 * BEAT, CHORDS.length - 1);
+  const n = padL.length;
+  const drums = new Float32Array(n);
+  const bass = new Float32Array(n);
+  const k = kick();
+  const s = snare();
+  const h = hat();
+  const kicks: number[] = [];
+  for (let t = drop; t < end - 1e-6; t += BEAT) {
+    const beat = Math.round((t - drop) / BEAT);
+    // A one-beat breath before the end card.
+    if (t >= end - BEAT) break;
+    add(drums, k, t, 0.95);
+    kicks.push(t);
+    if (beat % 2 === 1) add(drums, s, t, 0.5);
+    add(drums, h, t + BEAT / 2, beat % 4 === 3 ? 0.3 : 0.2);
+  }
+  // Plucked bass on eighth notes: the root of the current chord, plus a sub an octave down.
+  for (let t = drop; t < end - BEAT - 1e-6; t += BEAT / 2) {
+    const chord = CHORDS[Math.floor((t - drop) / (8 * BEAT)) % CHORDS.length];
+    const f0 = hz(chord[0]);
+    const len = Math.floor(SR * 0.22);
+    const i0 = Math.floor(t * SR);
+    for (let i = 0; i < len && i0 + i < n; i++) {
+      const tt = i / SR;
+      const p = TAU * f0 * tt;
+      const v = (Math.sin(p) + 0.45 * Math.sin(2 * p) + 0.2 * Math.sin(3 * p) + 0.6 * Math.sin(p / 2)) * Math.exp(-tt / 0.12) * Math.min(1, tt / 0.004);
+      bass[i0 + i] += v * 0.32;
+    }
+  }
+  const bassLp = svf(bass, () => 700, 1.0, "lp");
+  // Impacts on the drop and on the end card, with a riser into the drop.
+  const impact = new Float32Array(n);
+  add(impact, riser(1.5), drop - 1.5, 0.5);
+  for (const t of [drop, end]) {
+    add(impact, hit(), t, 0.8);
+    add(impact, crash(), t, 0.35);
+    add(impact, k, t, 1);
+  }
+  // Sidechain: the pad and bass duck under every kick.
+  const L = new Float32Array(n);
+  const R = new Float32Array(n);
+  let next = 0;
+  let last = -10;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    while (next < kicks.length && kicks[next] <= t) last = kicks[next++];
+    const duck = 1 - 0.55 * Math.exp(-(t - last) / 0.13);
+    const music = (padL[i] * 0.8 + bassLp[i]) * duck;
+    const musicR = (padR[i] * 0.8 + bassLp[i]) * duck;
+    L[i] = music + drums[i] * 0.6 + impact[i] * 0.6;
+    R[i] = musicR + drums[i] * 0.6 + impact[i] * 0.6;
+  }
+  const peak = 0.9 / Math.max(...[L, R].map((x) => x.reduce((m, v) => Math.max(m, Math.abs(v)), 0)));
+  for (let i = 0; i < n; i++) {
+    L[i] *= peak;
+    R[i] *= peak;
+  }
+  return [L, R] as const;
+}
+
 mkdirSync(new URL("../public/sfx", import.meta.url), { recursive: true });
 mkdirSync(new URL("../public/music", import.meta.url), { recursive: true });
 [0.86, 0.93, 1, 1.07, 1.15].forEach((k, i) => wav(`sfx/tock-${i + 1}.wav`, tock(k)));
@@ -229,3 +350,5 @@ wav("sfx/pop.wav", pop());
 const total = JSON.parse(readFileSync(new URL("../src/generated/timing.json", import.meta.url), "utf8")).total as number;
 const [l, r] = bed(total);
 wav("music/bed.wav", l, r);
+const [tl, tr] = teaserTrack();
+wav("music/teaser.wav", tl, tr);

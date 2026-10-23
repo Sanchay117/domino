@@ -13,7 +13,9 @@
     "capture": "tsx scripts/capture.ts",
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Domino out/domino.mp4 --crf 18",
-    "master": "tsx scripts/master.ts"
+    "master": "tsx scripts/master.ts",
+    "render:teaser": "remotion render src/index.ts Teaser out/teaser.mp4 --crf 18",
+    "master:teaser": "tsx scripts/master.ts teaser"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.538",

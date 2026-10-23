@@ -1,10 +1,11 @@
 // Final mastering: two-pass EBU R128 loudness normalisation of the rendered video's audio to −16 LUFS
-// (true peak −1.5 dBTP), video stream copied untouched. out/domino.mp4 → out/domino-final.mp4.
+// (true peak −1.5 dBTP), video stream copied untouched. out/<name>.mp4 → out/<name>-final.mp4, name defaults to domino.
 
 import { spawnSync } from "node:child_process";
 
-const input = new URL("../out/domino.mp4", import.meta.url).pathname;
-const output = new URL("../out/domino-final.mp4", import.meta.url).pathname;
+const name = process.argv[2] ?? "domino";
+const input = new URL(`../out/${name}.mp4`, import.meta.url).pathname;
+const output = new URL(`../out/${name}-final.mp4`, import.meta.url).pathname;
 const TARGET = "I=-16:TP=-1.5:LRA=11";
 
 const measure = spawnSync("ffmpeg", ["-hide_banner", "-i", input, "-af", `loudnorm=${TARGET}:print_format=json`, "-f", "null", "-"], { encoding: "utf8" });
