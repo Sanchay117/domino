@@ -2,7 +2,7 @@
 
 **See the cascade before the market does.**
 
-**Live dashboard: [sanchay117.github.io/domino](https://sanchay117.github.io/domino/)**
+**Live dashboard: [sanchay117.github.io/domino](https://sanchay117.github.io/domino/) · Demo video: [youtu.be/X8KG6NZph5w](https://youtu.be/X8KG6NZph5w)**
 
 Domino is a liquidation-cascade lab for [Strike Finance](https://strikefinance.org) perps. It ports Strike's own liquidation engine to TypeScript, checks itself against every live liquidation price Strike serves (**472 of 472, exactly**), and then replays crashes second by second against every live position and the real order books.
 
