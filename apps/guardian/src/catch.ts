@@ -91,7 +91,7 @@ export async function catchCascade(snap: NormalizedSnapshot, o: CatchOptions): P
 }
 
 function delta(x: number, upIsGood: boolean): string {
-  if (Math.abs(x) < 0.5) return c.dim("—");
+  if (Math.abs(x) < 0.5) return c.dim("–");
   const s = (x > 0 ? "+" : "") + usdShort(x);
   return x > 0 === upIsGood ? c.green(s) : c.red(s);
 }

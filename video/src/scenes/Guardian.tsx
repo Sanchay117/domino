@@ -110,7 +110,7 @@ export const Guardian: React.FC = () => {
             {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
               <div key={c} style={{ width: 13, height: 13, borderRadius: 7, background: c, opacity: 0.85 }} />
             ))}
-            <div style={{ flex: 1, textAlign: "center", fontFamily: mono, fontSize: 17, color: C.muted, marginRight: 60 }}>domino — guardian</div>
+            <div style={{ flex: 1, textAlign: "center", fontFamily: mono, fontSize: 17, color: C.muted, marginRight: 60 }}>domino · guardian</div>
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export const Guardian: React.FC = () => {
       <KeyClicks from={typeStart} to={typeEnd} />
       <Sfx src="sfx/key.wav" at={enter - 0.05} volume={0.4} />
       {[tReduce, tSigned, tFee, tWatch + 0.05].map((t, i) => (
-        <Sfx key={i} src="sfx/pop.wav" at={t + 0.1} volume={0.22} />
+        <Sfx key={i} src="sfx/pop.wav" at={t + 0.1} volume={0.12} />
       ))}
     </AbsoluteFill>
   );

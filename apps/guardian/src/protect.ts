@@ -56,15 +56,15 @@ async function protectOnce(
     const m = snap.markets[r.pos.symbol];
     const was = pending.get(r.pos.id);
     if (was !== undefined && was === r.pos.size) {
-      rows.push([c.bold(base(r.pos.symbol)), r.side, size(Math.abs(r.pos.size)), price(r.state.mark), r.liq ? price(r.liq) : "—", "—", c.dim("order pending, waiting for fill")]);
+      rows.push([c.bold(base(r.pos.symbol)), r.side, size(Math.abs(r.pos.size)), price(r.state.mark), r.liq ? price(r.liq) : "–", "–", c.dim("order pending, waiting for fill")]);
       continue;
     }
     pending.delete(r.pos.id);
     // The cascade is led by the position's own market, with every other market following by β.
     const plan = deriskPlan(snap, r.pos.id, (shock) => correlatedScenario(snap, shock, r.pos.symbol), o.survive);
-    const dist = r.liqDistance === null ? "—" : pct(r.liqDistance);
+    const dist = r.liqDistance === null ? "–" : pct(r.liqDistance);
     if (!plan || plan.survivesWithoutAction) {
-      rows.push([c.bold(base(r.pos.symbol)), r.side, size(Math.abs(r.pos.size)), price(r.state.mark), r.liq ? price(r.liq) : "—", dist, c.green("safe")]);
+      rows.push([c.bold(base(r.pos.symbol)), r.side, size(Math.abs(r.pos.size)), price(r.state.mark), r.liq ? price(r.liq) : "–", dist, c.green("safe")]);
       continue;
     }
     const usd = plan.reduceSize * r.state.mark;
@@ -73,7 +73,7 @@ async function protectOnce(
       r.side,
       size(Math.abs(r.pos.size)),
       price(r.state.mark),
-      r.liq ? price(r.liq) : "—",
+      r.liq ? price(r.liq) : "–",
       dist,
       c.yellow(`reduce ${size(plan.reduceSize)} (${(plan.reduceFraction * 100).toFixed(1)}%, ${usdShort(usd)})`),
     ]);

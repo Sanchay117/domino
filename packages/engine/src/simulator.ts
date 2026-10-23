@@ -1,7 +1,7 @@
 // Tick-by-tick replay of Strike's mark-price liquidation cycle under an index shock.
 //
 // Every simulated second is one accepted mark-price batch: the index moves, market makers re-quote,
-// the mark is recomputed from the book, and the staged liquidation engine runs exactly as documented —
+// the mark is recomputed from the book, and the staged liquidation engine runs exactly as documented:
 // deterministic queue, risk-scaled partial IOCs at the neutral-price bound, attempt 5 full close,
 // then the Insurance Fund or Type 1 ADL backstop.
 

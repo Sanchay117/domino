@@ -63,7 +63,7 @@ export default function Radar({ snap }: { snap: NormalizedSnapshot }) {
         </div>
         <div className="stat">
           <div className="label">Fear &amp; Greed</div>
-          <div className="value">{snap.fearGreed?.value ?? "—"}</div>
+          <div className="value">{snap.fearGreed?.value ?? "–"}</div>
           <div className="note">{snap.fearGreed?.classification ?? ""}</div>
         </div>
         <div className="stat">

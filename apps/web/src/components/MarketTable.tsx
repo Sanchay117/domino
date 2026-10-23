@@ -5,7 +5,7 @@ import { base, pct, usdShort } from "../format.ts";
 type Key = "oi" | "nearestLong" | "nearestShort" | "longLiqUsd10" | "cover" | "beta" | "positions";
 
 const cover = (r: MarketRisk) => (r.longLiqUsd10 > 0 ? r.bidDepth10 / r.longLiqUsd10 : Infinity);
-const dist = (d: number | null) => (d === null ? "—" : Math.abs(d) > 5 ? (d > 0 ? ">+500%" : "<−500%") : pct(d));
+const dist = (d: number | null) => (d === null ? "–" : Math.abs(d) > 5 ? (d > 0 ? ">+500%" : "<−500%") : pct(d));
 
 export default function MarketTable({ rows, onPick }: { rows: MarketRisk[]; onPick: (symbol: string) => void }) {
   const [sort, setSort] = useState<{ key: Key; dir: 1 | -1 }>({ key: "oi", dir: -1 });
@@ -74,7 +74,7 @@ export default function MarketTable({ rows, onPick }: { rows: MarketRisk[]; onPi
                 <td className="r num">{r.positions}</td>
                 <td className={`r num ${r.nearestLong !== null && r.nearestLong > -0.03 ? "red" : ""}`}>{dist(r.nearestLong)}</td>
                 <td className={`r num ${r.nearestShort !== null && r.nearestShort < 0.03 ? "red" : ""}`}>{dist(r.nearestShort)}</td>
-                <td className="r num">{r.longLiqUsd10 ? usdShort(r.longLiqUsd10) : "—"}</td>
+                <td className="r num">{r.longLiqUsd10 ? usdShort(r.longLiqUsd10) : "–"}</td>
                 <td className="r num">{usdShort(r.bidDepth10)}</td>
                 <td className={`r num ${c < 1 ? "red" : c < 3 ? "amber" : "mint"}`}>{Number.isFinite(c) ? `${c.toFixed(1)}×` : "∞"}</td>
                 <td className="r num">{r.beta.toFixed(2)}</td>

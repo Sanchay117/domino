@@ -145,7 +145,7 @@ export const Open: React.FC = () => {
       <Title at={titleAt + 0.2} />
 
       {FALL_TIMES.map((ft, i) => (
-        <Sfx key={i} src={tock(i)} at={ft} volume={i === 0 ? 0.25 : 0.38 + 0.22 * random(`v${i}`)} />
+        <Sfx key={i} src={tock(i)} at={ft} volume={i === 0 ? 0.22 : 0.28 + 0.16 * random(`v${i}`)} />
       ))}
       <Sfx src={tock(3)} at={FALL_TIMES[N - 1] + FALL} volume={0.5} />
       {tagTimes.map((tt, i) => (

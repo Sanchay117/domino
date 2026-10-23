@@ -251,7 +251,7 @@ function hitBy(snap: Snapshot, positionId: number, scenario: Scenario, params: P
 
 /**
  * Smallest adverse move (as a positive fraction) at which the cascade simulation first touches the
- * position — liquidation attempt, backstop or ADL. Null when it survives `maxShock`.
+ * position (liquidation attempt, backstop or ADL). Null when it survives `maxShock`.
  */
 export function survivalShock(snap: Snapshot, positionId: number, make: (signedShock: number) => Scenario, params: Partial<SimParams> = {}, maxShock = 0.6): number | null {
   const pos = snap.accounts.flatMap((a) => a.positions).find((p) => p.id === positionId);

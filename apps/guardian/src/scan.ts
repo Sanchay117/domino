@@ -30,7 +30,7 @@ export function scan(snap: NormalizedSnapshot, top = 10): void {
         t.uncoveredNotional > 0 ? c.red(usdShort(t.uncoveredNotional)) : c.dim("$0"),
         String(t.accountsHit),
         `${t.noFillAttempts}/${t.iocAttempts}`,
-        t.maxMarkGap.symbol ? `${base(t.maxMarkGap.symbol)} ${pct(t.maxMarkGap.pct, 2)}` : "—",
+        t.maxMarkGap.symbol ? `${base(t.maxMarkGap.symbol)} ${pct(t.maxMarkGap.pct, 2)}` : "–",
       ];
     }),
   );
@@ -40,7 +40,7 @@ export function scan(snap: NormalizedSnapshot, top = 10): void {
     .filter((m) => m.positions > 0)
     .sort((a, b) => b.longUsd + b.shortUsd - (a.longUsd + a.shortUsd))
     .slice(0, top);
-  const dist = (d: number | null, near: boolean) => (d === null ? c.dim("—") : near ? c.red(pct(d)) : Math.abs(d) > 5 ? ">500%" : pct(d));
+  const dist = (d: number | null, near: boolean) => (d === null ? c.dim("–") : near ? c.red(pct(d)) : Math.abs(d) > 5 ? ">500%" : pct(d));
   table(
     ["market", ">OI", ">longs/shorts", ">next long liq", ">next short liq", ">longs liq ≤10%", ">bids ≤10%", ">cover", ">β"],
     markets.map((m) => {
@@ -51,7 +51,7 @@ export function scan(snap: NormalizedSnapshot, top = 10): void {
         `${m.longs}/${m.shorts}`,
         dist(m.nearestLong, m.nearestLong !== null && m.nearestLong > -0.03),
         dist(m.nearestShort, m.nearestShort !== null && m.nearestShort < 0.03),
-        m.longLiqUsd10 ? usdShort(m.longLiqUsd10) : c.dim("—"),
+        m.longLiqUsd10 ? usdShort(m.longLiqUsd10) : c.dim("–"),
         usdShort(m.bidDepth10),
         !Number.isFinite(cover) ? c.green("∞") : cover < 1 ? c.red(`${cover.toFixed(1)}×`) : cover < 3 ? c.yellow(`${cover.toFixed(1)}×`) : c.green(`${cover.toFixed(1)}×`),
         m.beta.toFixed(2),

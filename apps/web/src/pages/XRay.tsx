@@ -145,12 +145,12 @@ function AccountCard({ snap, rows, risks }: { snap: NormalizedSnapshot; rows: Po
         </div>
         <div className="stat">
           <div className="label">Cross margin balance</div>
-          <div className="value">{cross ? usd(cross.marginBalance) : "—"}</div>
+          <div className="value">{cross ? usd(cross.marginBalance) : "–"}</div>
           <div className="note">{cross ? `uPnL ${usd(cross.upnl)}` : "no cross positions"}</div>
         </div>
         <div className="stat">
           <div className="label">Margin ratio</div>
-          <div className={`value ${cross && cross.ratio >= 0.7 ? "red" : ""}`}>{cross ? `${(cross.ratio * 100).toFixed(1)}%` : "—"}</div>
+          <div className={`value ${cross && cross.ratio >= 0.7 ? "red" : ""}`}>{cross ? `${(cross.ratio * 100).toFixed(1)}%` : "–"}</div>
           <div className="note">liquidation at 100%</div>
         </div>
         <div className="stat">
@@ -201,11 +201,11 @@ function AccountCard({ snap, rows, risks }: { snap: NormalizedSnapshot; rows: Po
                     <td className="r num">{price(r.state.mark)}</td>
                     <td className={`r num ${r.upnl >= 0 ? "mint" : "red"}`}>{usd(r.upnl)}</td>
                     <td className="r num">{r.liq ? price(r.liq) : "none"}</td>
-                    <td className="r num">{r.level === "bankrupt" ? <span className="red">past bankruptcy</span> : r.liqDistance === null ? "—" : pct(r.liqDistance)}</td>
+                    <td className="r num">{r.level === "bankrupt" ? <span className="red">past bankruptcy</span> : r.liqDistance === null ? "–" : pct(r.liqDistance)}</td>
                     <td className="r num">
                       {s === undefined ? <span className="dim">simulating…</span> : s === null ? <span className="mint">survives 60%</span> : <span className={s < 0.1 ? "red" : s < 0.2 ? "amber" : ""}>{pct(r.side === "long" ? -s : s)}</span>}
                     </td>
-                    <td className="r num">{adl ? <span className={adl.rank <= 3 ? "violet" : ""}>#{adl.rank} of {adl.of}</span> : <span className="dim">—</span>}</td>
+                    <td className="r num">{adl ? <span className={adl.rank <= 3 ? "violet" : ""}>#{adl.rank} of {adl.of}</span> : <span className="dim">–</span>}</td>
                   </tr>
                 );
               })}

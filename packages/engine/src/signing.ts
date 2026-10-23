@@ -1,5 +1,5 @@
 // Strike API-wallet authentication (Ed25519) and a small REST client.
-// Message: {METHOD}:{PATH?QUERY}:{TIMESTAMP}:{NONCE}:{SHA256(BODY)} — docs.strikefinance.org/api/getting-started
+// Message: {METHOD}:{PATH?QUERY}:{TIMESTAMP}:{NONCE}:{SHA256(BODY)} (see docs.strikefinance.org/api/getting-started)
 
 import * as ed from "@noble/ed25519";
 import { sha256, sha512 } from "@noble/hashes/sha2.js";

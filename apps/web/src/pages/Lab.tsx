@@ -286,8 +286,8 @@ export default function Lab({ snap, params }: { snap: NormalizedSnapshot; params
                     </td>
                     <td className="r num">{pct(r.shock, 0)}</td>
                     <td className="r num">{usdShort(r.liq)}</td>
-                    <td className="r num amber">{r.slp ? usdShort(r.slp) : "—"}</td>
-                    <td className="r num violet">{r.adl ? usdShort(r.adl) : "—"}</td>
+                    <td className="r num amber">{r.slp ? usdShort(r.slp) : "–"}</td>
+                    <td className="r num violet">{r.adl ? usdShort(r.adl) : "–"}</td>
                   </tr>
                 ))}
                 {bySymbol.length === 0 && (

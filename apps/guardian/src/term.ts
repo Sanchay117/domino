@@ -31,7 +31,7 @@ export function usdShort(x: number): string {
 export const pct = (x: number, digits = 1) => `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x * 100).toFixed(digits)}%`;
 
 export function price(x: number): string {
-  if (!Number.isFinite(x) || x === 0) return "—";
+  if (!Number.isFinite(x) || x === 0) return "–";
   const a = Math.abs(x);
   const d = a >= 10000 ? 0 : a >= 100 ? 2 : a >= 1 ? 3 : a >= 0.01 ? 5 : 7;
   return x.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d });
